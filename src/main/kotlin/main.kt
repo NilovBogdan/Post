@@ -18,9 +18,9 @@ data class Comments(
 data class Post(
     var id: Int,
     val date: Int,
-    val text: String,
-    val comments: Comments,
-    val likes: Likes,
+    val text: String?,
+    val comments: Comments?,
+    val likes: Likes?,
     val isPinned: Int,
     val markedAsAds: Boolean,
     val geo: Geo
