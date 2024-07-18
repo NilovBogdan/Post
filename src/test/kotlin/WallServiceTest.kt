@@ -1,8 +1,14 @@
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 
 
 class WallServiceTest {
+    @Before
+    fun clear() {
+        WallService.clear()
+    }
+
 
     @Test
     fun add() {
@@ -23,7 +29,7 @@ class WallServiceTest {
     @Test
     fun updateFalse() {
         val post = Post(
-            10,
+            0,
             12,
             "Text",
             Comments(1, true, true, true),
@@ -33,7 +39,7 @@ class WallServiceTest {
             Geo("Type", "coordinates")
         )
         val post1 = Post(
-            10,
+            0,
             12,
             "Text",
             Comments(1, true, true, true),
@@ -50,7 +56,7 @@ class WallServiceTest {
     @Test
     fun updateTrue() {
         val post = Post(
-            10,
+            0,
             12,
             "Text",
             Comments(1, true, true, true),
@@ -60,7 +66,7 @@ class WallServiceTest {
             Geo("Type", "coordinates")
         )
         val post1 = Post(
-            11,
+            1,
             12,
             "Text",
             Comments(1, true, true, true),

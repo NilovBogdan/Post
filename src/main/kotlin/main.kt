@@ -30,8 +30,15 @@ data class Post(
 
 object WallService {
     var posts = emptyArray<Post>()
+    var idCount: Int = 0
+    fun clear() {
+        posts = emptyArray()
+        idCount = 0
+    }
+
     fun add(post: Post): Post {
-        post.id += 1
+        idCount += 1
+        post.id = idCount
         posts += post
         return posts.last()
     }
@@ -39,7 +46,7 @@ object WallService {
     fun update(post: Post): Boolean {
         for ((index, postId) in posts.withIndex()) {
             if (postId.id == post.id) {
-                posts[index] = post
+                posts[index] = post.copy()
                 return true
             }
         }
@@ -49,7 +56,7 @@ object WallService {
 
 fun main() {
     val post = Post(
-        10,
+        0,
         12,
         "Text",
         Comments(1, true, true, true),
