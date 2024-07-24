@@ -1,3 +1,4 @@
+class PostNotFoundException(message: String) : RuntimeException(message)
 interface Attachment {
     val type: String
 }
@@ -98,7 +99,9 @@ data class Comments(
     val count: Int,
     val canPost: Boolean,
     val groupsCanPost: Boolean,
-    val canClose: Boolean
+    val canClose: Boolean,
+    val data: Int,
+    val text: String
 )
 
 data class Post(
@@ -115,7 +118,8 @@ data class Post(
 }
 
 object WallService {
-    var posts = emptyArray<Post>()
+    private var posts = emptyArray<Post>()
+    private var comments = emptyArray<Comments>()
     var idCount: Int = 0
     fun clear() {
         posts = emptyArray()
@@ -129,12 +133,22 @@ object WallService {
         return posts.last()
     }
 
+    fun createComment(postId: Int, comment: Comments): Comments {
+        for ((index, post) in posts.withIndex()) {
+            if (post.id == postId) {
+                comments += comment
+                return comment
+            }
+        }
+        return throw PostNotFoundException("Пост не найден")
+    }
+
     fun update(post: Post): Boolean {
         for ((index, postId) in posts.withIndex()) {
             if (postId.id == post.id) {
                 posts[index] = post.copy(
                     date = 7, text = "Drugoi text",
-                    comments = Comments(2, true, false, false),
+                    comments = Comments(2, true, false, false, 12, ""),
                     likes = Likes(2, false), isPinned = 2, markedAsAds = false
                 )
                 return true
@@ -149,7 +163,7 @@ fun main() {
         0,
         12,
         "Text",
-        Comments(1, true, true, true),
+        Comments(1, true, true, true, 12, ""),
         Likes(1, true),
         1,
         true,
