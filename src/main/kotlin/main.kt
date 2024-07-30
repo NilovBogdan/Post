@@ -1,4 +1,4 @@
-class PostNotFoundException(message: String) : RuntimeException(message)
+class NotFoundException(message: String) : RuntimeException(message)
 interface Attachment {
     val type: String
 }
@@ -104,6 +104,7 @@ data class Comments(
     val text: String
 )
 
+
 data class Post(
     var id: Int,
     val date: Int,
@@ -112,16 +113,15 @@ data class Post(
     val likes: Likes?,
     val isPinned: Int,
     val markedAsAds: Boolean,
-    val geo: Geo
-) {
-
-}
+    val geo: Geo,
+)
 
 object WallService {
     private var posts = emptyArray<Post>()
     private var comments = emptyArray<Comments>()
-    var idCount: Int = 0
+    private var idCount: Int = 0
     fun clear() {
+        comments = emptyArray()
         posts = emptyArray()
         idCount = 0
     }
@@ -134,13 +134,13 @@ object WallService {
     }
 
     fun createComment(postId: Int, comment: Comments): Comments {
-        for ((index, post) in posts.withIndex()) {
+        for (post in posts) {
             if (post.id == postId) {
                 comments += comment
                 return comment
             }
         }
-        return throw PostNotFoundException("Пост не найден")
+        return throw NotFoundException("Пост не найден")
     }
 
     fun update(post: Post): Boolean {
@@ -158,15 +158,172 @@ object WallService {
     }
 }
 
+data class Notes(
+    var noteId: Int,
+    val date: Int,
+    var comments: Int,
+    var title: String,
+    var text: String,
+    var privacy: Int,
+    var commentPrivacy: Int,
+    val viewUrl: String,
+    var noteComments: MutableList<NotesComments> = mutableListOf<NotesComments>()
+)
+
+data class NotesComments(
+    var commentsId: Int,
+    var message: String
+)
+
+object NoteService {
+    private var notes = mutableListOf<Notes>()
+    private var deletedNotes = mutableListOf<Notes>()
+    private var deletedComments = mutableListOf<NotesComments>()
+    private var noteIdCount = 0
+    var commentIdCount = 0
+    fun clear() {
+        noteIdCount = 0
+        notes = mutableListOf()
+        commentIdCount = 0
+    }
+
+    fun add(note: Notes): Int {
+        noteIdCount += 1
+        note.comments = note.noteComments.size
+        note.noteId = noteIdCount
+        notes += note
+        return note.noteId
+    }
+
+    fun createComment(noteId: Int, noteComments: MutableList<NotesComments>): Int {
+        for (note in notes) {
+            if (note.noteId == noteId) {
+                commentIdCount += 1
+                note.comments += 1
+                noteComments[0].commentsId += commentIdCount
+                note.noteComments += noteComments
+                return noteComments[0].commentsId
+            }
+
+        }
+        return throw NotFoundException("Заметка не найдена")
+    }
+
+    fun delete(noteId: Int): Int {
+        for ((index, note) in notes.withIndex()) {
+            if (noteId == note.noteId) {
+                deletedNotes += note.copy()
+                notes.removeAt(index)
+                return 1
+            }
+        }
+        return throw NotFoundException("Заметка не найдена")
+    }
+
+    fun deleteComment(noteId: Int, commentId: Int): Int {
+        for (note in notes) {
+            if (noteId == note.noteId) {
+                for ((ind, noteComment) in note.noteComments.withIndex()) {
+                    if (commentId == noteComment.commentsId) {
+                        deletedComments += noteComment.copy()
+                        note.noteComments.removeAt(ind)
+                        note.comments -= 1
+                        return 1
+                    }
+                }
+            }
+
+        }
+        return throw NotFoundException("Комментарий не найден")
+    }
+
+    fun edit(noteId: Int, noteEdit: Notes): Int {
+        for (note in notes) {
+            if (noteId == note.noteId) {
+                if (note.privacy == 0 || note.privacy == 1 || note.privacy == 2) {
+                    note.title = noteEdit.title
+                    note.text = noteEdit.text
+                    return 1
+                }
+                return throw NotFoundException("Редактирование невозможно")
+
+            }
+        }
+        return throw NotFoundException("Заметка не найдена")
+    }
+
+    fun editComment(noteId: Int, commentsId: Int, message: String): Int {
+        for (note in notes) {
+            if (noteId == note.noteId) {
+                for ((ind, noteComment) in note.noteComments.withIndex()) {
+                    if (commentsId == noteComment.commentsId) {
+                        note.noteComments[ind].message = message
+                        return 1
+                    }
+                }
+                return throw NotFoundException("Комментарий не найден")
+            }
+        }
+        return throw NotFoundException("Заметка не найдена")
+    }
+
+    fun get(): MutableList<String> {
+        var getting = mutableListOf<String>()
+        for (note in notes) {
+            var get: String = "\n" + "id заметки " + note.noteId.toString() + "\n"
+            get += " Дата " + note.date.toString() + "\n"
+            get += " Заголовок " + note.title + "\n"
+            get += " Текст заметки " + note.text + "\n"
+            get += " Колличество комментариев " + note.comments + "\n"
+            get += note.noteComments + "\n"
+            getting += get
+        }
+        return getting
+    }
+
+    fun getById(noteId: Int): MutableList<String> {
+        var getting = mutableListOf<String>()
+        for ((index, note) in notes.withIndex()) {
+            if (noteId == note.noteId) {
+                var get: String = "\n" + "id заметки " + note.noteId.toString() + "\n"
+                get += " Дата " + note.date.toString() + "\n"
+                get += " Заголовок " + note.title + "\n"
+                get += " Текст заметки " + note.text + "\n"
+                get += " Колличество комментариев " + note.comments + "\n"
+                get += " Уровень доступа к заметке " + note.privacy + "\n"
+                get += " Уровень доступа к комментированию заметки " + note.commentPrivacy + "\n"
+                getting += get
+            }
+        }
+        return getting
+    }
+
+    fun getComments(noteId: Int): MutableList<NotesComments> {
+        var comments = mutableListOf<NotesComments>()
+        for (note in notes) {
+            if (noteId == note.noteId) {
+                comments = note.noteComments
+            }
+        }
+        return comments
+    }
+
+    fun restoreComment(noteId: Int, commentId: Int): Int {
+        for (note in notes) {
+            if (noteId == note.noteId) {
+                for ((index, delete) in deletedComments.withIndex()) {
+                    if (commentId == deletedComments[index].commentsId) {
+                        note.noteComments += deletedComments[index]
+                        note.comments += 1
+                        deletedComments.removeAt(index)
+                        return 1
+                    }
+                }
+            }
+        }
+        return throw NotFoundException("Комментарий не найден")
+    }
+}
+
 fun main() {
-    val post = Post(
-        0,
-        12,
-        "Text",
-        Comments(1, true, true, true, 12, ""),
-        Likes(1, true),
-        1,
-        true,
-        Geo("Type", "coordinates")
-    )
 }
