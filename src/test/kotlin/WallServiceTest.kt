@@ -127,7 +127,9 @@ class WallServiceTest {
             Geo("Type", "coordinates")
         )
         WallService.add(post)
-        val result = WallService.createComment(5, comments)
-        assertEquals(result, comments)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            WallService.createComment(5, comments)
+        }
+        Assert.assertEquals("Пост не найден", result.message)
     }
 }

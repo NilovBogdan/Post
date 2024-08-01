@@ -180,10 +180,12 @@ object NoteService {
     private var deletedNotes = mutableListOf<Notes>()
     private var deletedComments = mutableListOf<NotesComments>()
     private var noteIdCount = 0
-    var commentIdCount = 0
+    private var commentIdCount = 0
     fun clear() {
         noteIdCount = 0
         notes = mutableListOf()
+        deletedNotes = mutableListOf()
+        deletedComments = mutableListOf()
         commentIdCount = 0
     }
 
@@ -195,14 +197,15 @@ object NoteService {
         return note.noteId
     }
 
-    fun createComment(noteId: Int, noteComments: MutableList<NotesComments>): Int {
+    fun createComment(noteId: Int, noteComments: NotesComments): Int {
         for (note in notes) {
             if (note.noteId == noteId) {
                 commentIdCount += 1
                 note.comments += 1
-                noteComments[0].commentsId += commentIdCount
+                note.noteComments
+                noteComments.commentsId += commentIdCount
                 note.noteComments += noteComments
-                return noteComments[0].commentsId
+                return noteComments.commentsId
             }
 
         }
@@ -267,45 +270,26 @@ object NoteService {
         return throw NotFoundException("Заметка не найдена")
     }
 
-    fun get(): MutableList<String> {
-        var getting = mutableListOf<String>()
-        for (note in notes) {
-            var get: String = "\n" + "id заметки " + note.noteId.toString() + "\n"
-            get += " Дата " + note.date.toString() + "\n"
-            get += " Заголовок " + note.title + "\n"
-            get += " Текст заметки " + note.text + "\n"
-            get += " Колличество комментариев " + note.comments + "\n"
-            get += note.noteComments + "\n"
-            getting += get
-        }
-        return getting
+    fun get(): MutableList<Notes> {
+        return notes
     }
 
-    fun getById(noteId: Int): MutableList<String> {
-        var getting = mutableListOf<String>()
-        for ((index, note) in notes.withIndex()) {
+    fun getById(noteId: Int): Notes {
+        for (note in notes) {
             if (noteId == note.noteId) {
-                var get: String = "\n" + "id заметки " + note.noteId.toString() + "\n"
-                get += " Дата " + note.date.toString() + "\n"
-                get += " Заголовок " + note.title + "\n"
-                get += " Текст заметки " + note.text + "\n"
-                get += " Колличество комментариев " + note.comments + "\n"
-                get += " Уровень доступа к заметке " + note.privacy + "\n"
-                get += " Уровень доступа к комментированию заметки " + note.commentPrivacy + "\n"
-                getting += get
+                return note
             }
         }
-        return getting
+        return throw NotFoundException("Заметка не найдена")
     }
 
     fun getComments(noteId: Int): MutableList<NotesComments> {
-        var comments = mutableListOf<NotesComments>()
         for (note in notes) {
             if (noteId == note.noteId) {
-                comments = note.noteComments
+                return note.noteComments
             }
         }
-        return comments
+        return throw NotFoundException("Заметка не найдена")
     }
 
     fun restoreComment(noteId: Int, commentId: Int): Int {
@@ -327,3 +311,4 @@ object NoteService {
 
 fun main() {
 }
+

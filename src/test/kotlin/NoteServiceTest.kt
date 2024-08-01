@@ -40,7 +40,7 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         val result = NoteService.createComment(1, newNoteComments)
         Assert.assertEquals(result, 1)
@@ -58,10 +58,13 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
-        val result = NoteService.createComment(2, newNoteComments)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.createComment(2, newNoteComments)
+        }
+
+        Assert.assertEquals("Заметка не найдена", result.message)
     }
 
     @Test
@@ -94,9 +97,12 @@ class NoteServiceTest {
             ""
         )
         NoteService.add(note)
-        val result = NoteService.delete(2)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.delete(2)
+        }
+        Assert.assertEquals("Заметка не найдена", result.message)
     }
+
 
     @Test
     fun deleteComment() {
@@ -110,7 +116,7 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
         val result = NoteService.deleteComment(1, 1)
@@ -129,11 +135,13 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
-        val result = NoteService.deleteComment(1, 2)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.deleteComment(1, 2)
+        }
+        Assert.assertEquals("Комментарий не найден", result.message)
     }
 
     @Test
@@ -181,13 +189,15 @@ class NoteServiceTest {
             0,
             "ffgfg",
             "reetert",
-            0,
+            3,
             0,
             ""
         )
         NoteService.add(note)
-        val result = NoteService.edit(1, note2)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.edit(1, note2)
+        }
+        Assert.assertEquals("Редактирование невозможно", result.message)
     }
 
     @Test
@@ -213,8 +223,10 @@ class NoteServiceTest {
             ""
         )
         NoteService.add(note)
-        val result = NoteService.edit(2, note2)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.edit(2, note2)
+        }
+        Assert.assertEquals("Заметка не найдена", result.message)
     }
 
     @Test
@@ -229,7 +241,7 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
         val result = NoteService.editComment(1, 1, "New text")
@@ -248,11 +260,13 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
-        val result = NoteService.editComment(1, 2, "New text")
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.editComment(1, 2, "New text")
+        }
+        Assert.assertEquals("Комментарий не найден", result.message)
     }
 
     @Test
@@ -267,11 +281,13 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
-        val result = NoteService.editComment(2, 1, "New text")
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.editComment(2, 1, "New text")
+        }
+        Assert.assertEquals("Заметка не найдена", result.message)
     }
 
     @Test
@@ -288,9 +304,8 @@ class NoteServiceTest {
         )
         NoteService.add(note)
         val result = NoteService.get()
-        var get = mutableListOf<String>()
-        get = NoteService.get()
-        Assert.assertEquals(result, get)
+        val list = mutableListOf<Notes>() + note
+        Assert.assertEquals(result, list)
     }
 
     @Test
@@ -306,15 +321,12 @@ class NoteServiceTest {
             ""
         )
         NoteService.add(note)
-        var get = mutableListOf<String>()
-        get = NoteService.getById(1)
         val result = NoteService.getById(1)
-        Assert.assertEquals(result, get)
+        Assert.assertEquals(result, note)
     }
 
     @Test
     fun getComments() {
-        var comments = mutableListOf<NotesComments>()
         val note = Notes(
             1,
             12,
@@ -326,11 +338,11 @@ class NoteServiceTest {
             ""
         )
         NoteService.add(note)
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.createComment(1, newNoteComments)
-        comments = NoteService.getComments(1)
         val result = NoteService.getComments(1)
-        Assert.assertEquals(result, comments)
+        val list = mutableListOf<NotesComments>() + newNoteComments
+        Assert.assertEquals(result, list)
     }
 
     @Test
@@ -345,7 +357,7 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
         NoteService.deleteComment(1, 1)
@@ -365,11 +377,13 @@ class NoteServiceTest {
             0,
             ""
         )
-        val newNoteComments: MutableList<NotesComments> = mutableListOf(NotesComments(0, "Новый комментарий"))
+        val newNoteComments = NotesComments(0, "Новый комментарий")
         NoteService.add(note)
         NoteService.createComment(1, newNoteComments)
         NoteService.deleteComment(1, 1)
-        val result = NoteService.restoreComment(1, 2)
-        Assert.assertEquals(result, 1)
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            NoteService.restoreComment(1, 2)
+        }
+        Assert.assertEquals("Комментарий не найден", result.message)
     }
 }
