@@ -167,7 +167,7 @@ data class Notes(
     var privacy: Int,
     var commentPrivacy: Int,
     val viewUrl: String,
-    var noteComments: MutableList<NotesComments> = mutableListOf<NotesComments>()
+    var noteComments: MutableList<NotesComments> = mutableListOf()
 )
 
 data class NotesComments(
@@ -307,6 +307,85 @@ object NoteService {
         }
         return throw NotFoundException("Комментарий не найден")
     }
+}
+
+data class Chats(
+    var id: Int,
+    var unreadMessages: Int,
+    var directMessages: MutableList<String> = mutableListOf()
+)
+
+
+object ChatService {
+    private var chats = mutableListOf<Chats>()
+    fun clear() {
+        chats = mutableListOf()
+    }
+
+    fun add(id: Int, message: String): Int {
+        chats.filter { it.id == id }.forEach { chat ->
+            chat.directMessages += message
+            chat.unreadMessages += 1
+            return 1
+        }
+        val newMessage: MutableList<String> = mutableListOf()
+        newMessage += message
+        chats += Chats(id, +1, newMessage)
+        return 2
+    }
+
+    fun getChats(): MutableList<Chats> {
+        return chats
+    }
+
+    fun lastMessages(): MutableList<String> {
+        val messageLastAll: MutableList<String> = mutableListOf()
+        chats.filter { it.directMessages.isEmpty() }.forEach { it.directMessages += "Сообщений нет" }
+        chats.forEach { c -> messageLastAll += c.directMessages.last() }
+        return messageLastAll
+    }
+
+    fun getById(id: Int): MutableList<String> {
+        chats.filter { it.id == id }.forEach { chat ->
+            chat.unreadMessages = 0
+            return chat.directMessages
+        }
+        return throw NotFoundException("Чат не найден")
+    }
+
+    fun getByQuantityOfMessage(quantity: Int): MutableList<String> {
+        chats.filter { it.directMessages.size == quantity }.forEach { chat ->
+            chat.unreadMessages = 0
+            return chat.directMessages
+        }
+        return throw NotFoundException("Чат не найден")
+    }
+
+    fun deleteMessage(id: Int, message: String): Int {
+        chats.filter { it.id == id }.forEachIndexed { index, chat ->
+            chat.directMessages.filter { it == message }.forEach { _ ->
+                chat.unreadMessages = 0
+                chat.directMessages.removeAt(index)
+                return 1
+            }
+        }
+        return throw NotFoundException("Чат не найден")
+    }
+
+    fun deleteChat(id: Int): Int {
+        chats.filter { it.id == id }.forEach { _ ->
+            chats.removeIf { it.id == id }
+            return 1
+        }
+        return throw NotFoundException("Чат не найден")
+    }
+
+    fun getUnreadChat(): Int {
+        val unreadChatsCount = chats.filter { it.unreadMessages > 0 }
+        val count = unreadChatsCount.size
+        return count
+    }
+
 }
 
 fun main() {
