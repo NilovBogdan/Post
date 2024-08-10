@@ -338,25 +338,21 @@ object ChatService {
         return chats
     }
 
-    fun lastMessages(): MutableList<String> {
-        val messageLastAll: MutableList<String> = mutableListOf()
-        chats.filter { it.directMessages.isEmpty() }.forEach { it.directMessages += "Сообщений нет" }
-        chats.forEach { c -> messageLastAll += c.directMessages.last() }
-        return messageLastAll
+    fun lastMessages(): List<String> {
+        return chats.map { c -> c.directMessages.lastOrNull() ?: "Сообщений нет" }.toList()
     }
 
     fun getById(id: Int): MutableList<String> {
-        chats.filter { it.id == id }.forEach { chat ->
-            chat.unreadMessages = 0
-            return chat.directMessages
-        }
-        return throw NotFoundException("Чат не найден")
+        return chats.find { it.id == id }
+            ?.also { it.unreadMessages = 0}
+            ?.directMessages
+            ?: return throw NotFoundException("Чат не найден")
     }
 
-    fun getByQuantityOfMessage(quantity: Int): MutableList<String> {
-        chats.filter { it.directMessages.size == quantity }.forEach { chat ->
-            chat.unreadMessages = 0
-            return chat.directMessages
+    fun getByQuantityOfMessage(id: Int, quantity: Int): List<String> {
+        chats.filter { it.id == id }.forEach { chat ->
+            chat.unreadMessages -= chat.directMessages.asReversed().take(quantity).size
+            return chat.directMessages.asReversed().take(quantity)
         }
         return throw NotFoundException("Чат не найден")
     }
@@ -373,11 +369,8 @@ object ChatService {
     }
 
     fun deleteChat(id: Int): Int {
-        chats.filter { it.id == id }.forEach { _ ->
-            chats.removeIf { it.id == id }
-            return 1
-        }
-        return throw NotFoundException("Чат не найден")
+        chats.remove(chats.find { it.id == id } ?: throw NotFoundException("Чат не найден"))
+        return 1
     }
 
     fun getUnreadChat(): Int {

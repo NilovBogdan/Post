@@ -60,7 +60,7 @@ class ChatServiceTest {
     fun getByQuantityOfMessage() {
         val mes = mutableListOf("Message")
         ChatService.add(1, "Message")
-        val result = ChatService.getByQuantityOfMessage(1)
+        val result = ChatService.getByQuantityOfMessage(1, 1)
         Assert.assertEquals(result, mes)
     }
 
@@ -68,7 +68,7 @@ class ChatServiceTest {
     fun getByQuantityOfMessageThrow() {
         ChatService.add(1, "Message")
         val result = Assert.assertThrows(NotFoundException::class.java) {
-            ChatService.getByQuantityOfMessage(2)
+            ChatService.getByQuantityOfMessage(2, 1)
         }
         Assert.assertEquals("Чат не найден", result.message)
     }
