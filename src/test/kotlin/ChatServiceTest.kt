@@ -90,6 +90,15 @@ class ChatServiceTest {
     }
 
     @Test
+    fun deleteMessageThrowMessage() {
+        ChatService.add(1, "Message")
+        val result = Assert.assertThrows(NotFoundException::class.java) {
+            ChatService.deleteMessage(1, "Hello")
+        }
+        Assert.assertEquals("Сообщение не найдено", result.message)
+    }
+
+    @Test
     fun deleteChat() {
         ChatService.add(1, "Message")
         val result = ChatService.deleteChat(1)

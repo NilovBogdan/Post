@@ -344,13 +344,13 @@ object ChatService {
 
     fun getById(id: Int): MutableList<String> {
         return chats.find { it.id == id }
-            ?.also { it.unreadMessages = 0}
+            ?.also { it.unreadMessages = 0 }
             ?.directMessages
             ?: return throw NotFoundException("Чат не найден")
     }
 
     fun getByQuantityOfMessage(id: Int, quantity: Int): List<String> {
-        chats.filter { it.id == id }.forEach { chat ->
+        chats.asSequence().filter { it.id == id }.forEach { chat ->
             chat.unreadMessages -= chat.directMessages.asReversed().take(quantity).size
             return chat.directMessages.asReversed().take(quantity)
         }
@@ -358,14 +358,19 @@ object ChatService {
     }
 
     fun deleteMessage(id: Int, message: String): Int {
-        chats.filter { it.id == id }.forEachIndexed { index, chat ->
-            chat.directMessages.filter { it == message }.forEach { _ ->
-                chat.unreadMessages = 0
-                chat.directMessages.removeAt(index)
-                return 1
+        chats.asSequence().filter { it.id == id }
+            .forEachIndexed { index, chat ->
+                chat.directMessages
+                    .find { it == message }
+                    ?.forEach { _ ->
+                        chat.unreadMessages = 0
+                        chat.directMessages.removeAt(index)
+                        return 1
+                    }
+                    ?: return throw NotFoundException("Сообщение не найдено")
             }
-        }
         return throw NotFoundException("Чат не найден")
+
     }
 
     fun deleteChat(id: Int): Int {
